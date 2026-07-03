@@ -1,9 +1,10 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { Braces, BrainCircuit, DatabaseZap, Network, Sparkles } from "lucide-react";
+import { Braces, BrainCircuit, DatabaseZap, LockKeyhole, Network, PackageOpen, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { skillBranches } from "@/lib/portfolio-data";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const branchIcons = {
   backend: DatabaseZap,
@@ -16,6 +17,7 @@ export function SkillZone() {
   const reducedMotion = useReducedMotion() ?? false;
   const [branchId, setBranchId] = useState("backend");
   const [skillName, setSkillName] = useState("FastAPI");
+  const [unlocked, setUnlocked] = useState(() => new Set(skillBranches.map((branch) => branch.skills[0].name)));
   const activeBranch = useMemo(
     () => skillBranches.find((branch) => branch.id === branchId) ?? skillBranches[0],
     [branchId],
@@ -26,6 +28,15 @@ export function SkillZone() {
     const next = skillBranches.find((branch) => branch.id === id) ?? skillBranches[0];
     setBranchId(next.id);
     setSkillName(next.skills[0].name);
+  };
+
+  const inspectNode = (index: number) => {
+    const skill = activeBranch.skills[index];
+    const prerequisite = activeBranch.skills[index - 1];
+    if (index === 0 || unlocked.has(skill.name) || unlocked.has(prerequisite.name)) {
+      setUnlocked((current) => new Set([...current, skill.name]));
+      setSkillName(skill.name);
+    }
   };
 
   return (
@@ -69,22 +80,31 @@ export function SkillZone() {
           </div>
           <div className="tree-path" aria-hidden="true" />
           <div className="skill-nodes">
-            {activeBranch.skills.map((skill, index) => (
-              <motion.button
-                key={skill.name}
-                className="skill-node"
-                data-active={activeSkill.name === skill.name}
-                onClick={() => setSkillName(skill.name)}
-                initial={reducedMotion ? false : { opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.07 }}
-              >
-                <span className="node-rank">{String(index + 1).padStart(2, "0")}</span>
-                <strong>{skill.name}</strong>
-                <div className="node-meter"><span style={{ width: `${skill.level}%` }} /></div>
-                <small>Level {skill.level}</small>
-              </motion.button>
-            ))}
+            {activeBranch.skills.map((skill, index) => {
+              const isUnlocked = unlocked.has(skill.name);
+              const canUnlock = index === 0 || unlocked.has(activeBranch.skills[index - 1].name);
+              return (
+                <Tooltip key={skill.name}>
+                  <TooltipTrigger asChild>
+                    <motion.button
+                      className="skill-node"
+                      data-active={activeSkill.name === skill.name}
+                      data-locked={!isUnlocked}
+                      onClick={() => inspectNode(index)}
+                      initial={reducedMotion ? false : { opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.07 }}
+                    >
+                      <span className="node-rank">{isUnlocked ? String(index + 1).padStart(2, "0") : <LockKeyhole size={12} />}</span>
+                      <strong>{skill.name}</strong>
+                      <div className="node-meter"><span style={{ width: isUnlocked ? `${skill.level}%` : "0%" }} /></div>
+                      <small>{isUnlocked ? `Level ${skill.level}` : canUnlock ? "Ready to unlock" : "Prerequisite locked"}</small>
+                    </motion.button>
+                  </TooltipTrigger>
+                  <TooltipContent>{isUnlocked ? skill.proof : canUnlock ? "Activate to unlock this node" : `Unlock ${activeBranch.skills[index - 1].name} first`}</TooltipContent>
+                </Tooltip>
+              );
+            })}
           </div>
         </div>
 
@@ -98,6 +118,13 @@ export function SkillZone() {
           <div className="unlock-note"><span className="online-dot" /> Verified through repository evidence</div>
         </aside>
       </div>
+      <section className="inventory-rack" aria-label="Technology inventory">
+        <div className="inventory-title"><PackageOpen size={20} /><div><span>Inventory / Tech stack</span><strong>Equipped loadout</strong></div></div>
+        <div><span>Runtimes</span><strong>Python / Java / C++ / TypeScript</strong></div>
+        <div><span>Data</span><strong>PostgreSQL / pgvector / MongoDB / Redis</strong></div>
+        <div><span>Platform</span><strong>Docker / Envoy / CI/CD / Render</strong></div>
+        <div><span>Interface</span><strong>React / Next.js / PWA / Three.js</strong></div>
+      </section>
     </motion.section>
   );
 }

@@ -86,3 +86,5 @@ Portfolio claims are derived from Anish Kumar's public GitHub profile and the RE
 ## Deployment
 
 The project includes `.openai/hosting.json` and the Sites Vite adapter. `npm run build` produces the Cloudflare-compatible worker entry at `dist/server/index.js` and client assets under `dist/client`.
+
+`render.yaml` also defines a public Node web service for environments where Sites is not enabled. Render installs from the lockfile, builds the vinext production bundle, starts it on the assigned `PORT`, and probes `/` before marking the deployment healthy.

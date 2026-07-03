@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://anish-game-portfolio.onrender.com"),
   title: {
     default: "Anish Kumar | Software Engineer",
     template: "%s | Anish Kumar",
@@ -30,6 +31,7 @@ export const metadata: Metadata = {
     "system design",
   ],
   authors: [{ name: "Anish Kumar", url: "https://github.com/Anishhar03" }],
+  alternates: { canonical: "/" },
   openGraph: {
     title: "Anish Kumar | Engineering Command Center",
     description:
